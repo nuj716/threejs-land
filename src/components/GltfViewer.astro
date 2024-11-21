@@ -63,28 +63,28 @@
 
   .controls {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 50%;
+    right: 1rem;
     background: rgba(0, 0, 0, 0.7);
-    padding: 20px;
+    padding: 1rem;
     border-radius: 8px;
     color: white;
     z-index: 100;
-    width: 250px;
+    width: 15%;
   }
 
   .control-section {
-    margin-bottom: 20px;
+    margin-bottom: 1rem;
   }
 
   .control-section h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 .5rem 0;
     font-size: 16px;
   }
 
   .control-section label {
     display: block;
-    margin: 10px 0;
+    margin: .5rem 0;
     font-size: 14px;
   }
 
@@ -94,7 +94,7 @@
 
   select {
     width: 100%;
-    padding: 5px;
+    padding: .25rem;
     margin-bottom: 10px;
     background: #fff;
     border: none;
@@ -107,6 +107,8 @@
   import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
   import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
   import { RGBELoader } from 'three/examples/jsm/loaders/RGBELoader.js';
+  import gsap from 'gsap'
+  import GUI from 'lil-gui';
 
   class ModelViewer {
     private scene: THREE.Scene;
@@ -123,10 +125,10 @@
       this.setupEventListeners();
       this.animate();
     }
-
+    
     private async init(): Promise<void> {
       this.canvas = document.getElementById('model-canvas') as HTMLCanvasElement;
-      
+
       // Scene setup
       this.scene = new THREE.Scene();
       this.scene.background = new THREE.Color(0x333333);
@@ -161,6 +163,50 @@
 
       // Load GLTF model
       await this.loadModel();
+      
+      // debug ui
+      const gui = new GUI(
+          {
+              width: 500,
+              title: 'nice debug ui',
+              closeFolders: false
+          }
+      )
+      // close gui by default
+      gui.close()
+      // hide by default
+      gui.hide()
+
+      window.addEventListener('keydown', (event) => {
+          if(event.key == 's')
+              gui.show(gui._hidden)
+      })
+
+      const debugObject: any = {}
+
+      // debug 
+      // add folder
+      const modelTweaks = gui.addFolder('awesome model')
+      // close by default
+      modelTweaks.close()
+
+      // use folder name instead of gui to put all the debug to the folder
+      modelTweaks 
+          .add(this.model.position, 'y')
+          .min(-3)
+          .max(3)
+          .step(0.01)
+          .name('elevation')
+
+      modelTweaks
+          .add(this.model, 'visible')
+      debugObject.spin = () => 
+      {
+          gsap.to(this.model.rotation, { y: this.model.rotation.y + Math.PI * 2 })
+      }
+      modelTweaks
+          .add(debugObject, 'spin')
+
     }
 
     private async loadEnvironmentMap(type: string): Promise<void> {
@@ -308,6 +354,7 @@
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
     }
+    
   }
 
   // Initialize the viewer when the DOM is loaded
